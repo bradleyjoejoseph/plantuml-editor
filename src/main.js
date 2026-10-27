@@ -41,9 +41,6 @@ const copySvgBtn = document.getElementById('copySvgBtn');
 const templateSelect = document.getElementById('templateSelect');
 const layoutStackedBtn = document.getElementById('layoutStackedBtn');
 const layoutSplitBtn = document.getElementById('layoutSplitBtn');
-const themeToggleBtn = document.getElementById('themeToggleBtn');
-const themeIconDark = document.getElementById('themeIconDark');
-const themeIconLight = document.getElementById('themeIconLight');
 const shareLinkBtn = document.getElementById('shareLinkBtn');
 const helpModalBtn = document.getElementById('helpModalBtn');
 const helpModal = document.getElementById('helpModal');
@@ -80,37 +77,8 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// ============================================================================
-// Theme Management (Light / Dark)
-// ============================================================================
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('plantuml_theme', theme);
-  if (theme === 'light') {
-    themeIconDark.style.display = 'none';
-    themeIconLight.style.display = 'inline-block';
-  } else {
-    themeIconDark.style.display = 'inline-block';
-    themeIconLight.style.display = 'none';
-  }
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'dark';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-}
-
-// Initialize theme from saved preference or OS preference
-const savedTheme = localStorage.getItem('plantuml_theme');
-if (savedTheme) {
-  applyTheme(savedTheme);
-} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-  applyTheme('light');
-} else {
-  applyTheme('dark');
-}
-
-themeToggleBtn.addEventListener('click', toggleTheme);
+// Clear any obsolete stored dark theme preference
+localStorage.removeItem('plantuml_theme');
 
 // ============================================================================
 // Layout Switcher (Stacked vs Split)

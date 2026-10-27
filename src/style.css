@@ -1,61 +1,40 @@
 :root {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Dark theme by default (modern developer aesthetic) */
-  --bg-app: #0d1117;
-  --bg-surface: #161b22;
-  --bg-surface-elevated: #21262d;
-  --bg-surface-hover: #30363d;
-  --border-subtle: #30363d;
-  --border-strong: #484f58;
-
-  --text-main: #f0f6fc;
-  --text-muted: #8b949e;
-  --text-dim: #6e7681;
-
-  --accent-primary: #238636;
-  --accent-hover: #2ea043;
-  --accent-blue: #388bfd;
-  --accent-blue-hover: #58a6ff;
-  --accent-purple: #a371f7;
-  --danger: #f85149;
-  --warning: #d29922;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-
-  color-scheme: dark;
-}
-
-[data-theme="light"] {
+  /* Official GitHub Primer Light Scheme */
   --bg-app: #f6f8fa;
   --bg-surface: #ffffff;
-  --bg-surface-elevated: #f3f4f6;
-  --bg-surface-hover: #e5e7eb;
+  --bg-surface-elevated: #f6f8fa;
+  --bg-surface-hover: #f3f4f6;
   --border-subtle: #d0d7de;
   --border-strong: #afb8c1;
 
   --text-main: #1f2328;
-  --text-muted: #57606a;
+  --text-muted: #656d76;
   --text-dim: #6e7781;
 
+  /* GitHub Accents */
   --accent-primary: #1f883d;
   --accent-hover: #1a7f37;
   --accent-blue: #0969da;
-  --accent-blue-hover: #218bff;
+  --accent-blue-hover: #0860ca;
   --accent-purple: #8250df;
   --danger: #cf222e;
   --warning: #9a6700;
 
-  --shadow-sm: 0 1px 2px rgba(31, 35, 40, 0.08);
-  --shadow-md: 0 4px 12px rgba(31, 35, 40, 0.12);
-  --shadow-lg: 0 8px 24px rgba(31, 35, 40, 0.16);
+  --btn-bg: #f6f8fa;
+  --btn-border: #d0d7de;
+  --btn-hover-bg: #f3f4f6;
+  --btn-active-bg: #ebecf0;
+
+  --shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow-md: 0 1px 3px rgba(31, 35, 40, 0.12), 0 8px 24px rgba(66, 74, 83, 0.12);
+  --shadow-lg: 0 8px 24px rgba(140, 149, 159, 0.2);
+
+  --radius-sm: 6px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
 
   color-scheme: light;
 }
@@ -78,7 +57,7 @@ body {
 }
 
 /* ==========================================================================
-   Header & Navigation
+   Header & Navigation (GitHub Style)
    ========================================================================== */
 .site-header {
   background-color: var(--bg-surface);
@@ -100,16 +79,17 @@ body {
 }
 
 .logo-icon {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   color: var(--accent-blue);
   flex-shrink: 0;
 }
 
 .brand-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -120,45 +100,50 @@ body {
   font-weight: 600;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  background: rgba(35, 134, 54, 0.18);
-  color: #3fb950;
-  border: 1px solid rgba(63, 185, 80, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  background: #dafbe1;
+  color: #1a7f37;
+  border: 1px solid rgba(27, 129, 56, 0.3);
+  letter-spacing: 0.02em;
 }
 
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 /* ==========================================================================
-   Buttons, Inputs, Selects
+   GitHub Primer Button Styles
    ========================================================================== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.45rem 0.8rem;
+  padding: 0.38rem 0.75rem;
   font-size: 0.85rem;
   font-weight: 500;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--btn-border);
+  background-color: var(--btn-bg);
   color: var(--text-main);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s cubic-bezier(0.3, 0, 0.5, 1);
   user-select: none;
   text-decoration: none;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 .btn:hover {
-  background-color: var(--bg-surface-hover);
-  border-color: var(--border-strong);
+  background-color: var(--btn-hover-bg);
+  border-color: rgba(31, 35, 40, 0.15);
+}
+
+.btn:active {
+  background-color: var(--btn-active-bg);
+  box-shadow: none;
 }
 
 .btn:focus-visible {
@@ -168,43 +153,49 @@ body {
 
 .btn-primary {
   background-color: var(--accent-primary);
-  border-color: var(--accent-primary);
+  border-color: rgba(31, 35, 40, 0.15);
   color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.1);
 }
 
 .btn-primary:hover {
   background-color: var(--accent-hover);
-  border-color: var(--accent-hover);
+  border-color: rgba(31, 35, 40, 0.15);
+  color: #ffffff;
 }
 
 .btn-blue {
   background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
+  border-color: rgba(31, 35, 40, 0.15);
   color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.1);
 }
 
 .btn-blue:hover {
   background-color: var(--accent-blue-hover);
-  border-color: var(--accent-blue-hover);
+  border-color: rgba(31, 35, 40, 0.15);
+  color: #ffffff;
 }
 
 .btn-icon {
-  padding: 0.45rem;
+  padding: 0.4rem;
   min-width: 32px;
   height: 32px;
 }
 
 .select-control {
   appearance: none;
-  background-color: var(--bg-surface-elevated);
+  background-color: var(--btn-bg);
   border: 1px solid var(--border-subtle);
   color: var(--text-main);
-  padding: 0.45rem 2rem 0.45rem 0.75rem;
+  padding: 0.38rem 2rem 0.38rem 0.75rem;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23656d76' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
 }
@@ -215,11 +206,11 @@ body {
 }
 
 /* ==========================================================================
-   Segmented Controls / Pills (e.g. Transparent vs White)
+   Segmented Controls / Tabs
    ========================================================================== */
 .segmented-group {
   display: inline-flex;
-  background-color: var(--bg-surface-elevated);
+  background-color: #eaeef2;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 2px;
@@ -230,7 +221,7 @@ body {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 0.35rem 0.65rem;
+  padding: 0.3rem 0.65rem;
   font-size: 0.8rem;
   font-weight: 500;
   border-radius: 4px;
@@ -238,7 +229,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .segmented-btn:hover {
@@ -246,9 +237,9 @@ body {
 }
 
 .segmented-btn.active {
-  background-color: var(--bg-surface);
+  background-color: #ffffff;
   color: var(--text-main);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px rgba(31, 35, 40, 0.12);
   font-weight: 600;
 }
 
@@ -266,7 +257,6 @@ body {
   margin: 0 auto;
 }
 
-/* Split side-by-side mode (optional toggle) */
 .app-container.layout-split {
   flex-direction: row;
   height: calc(100vh - 65px);
@@ -281,7 +271,6 @@ body {
   flex-direction: column;
 }
 
-/* Default: Stacked mode ("see the output good undernearth") */
 .app-container.layout-stacked {
   flex-direction: column;
 }
@@ -290,7 +279,7 @@ body {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(31, 35, 40, 0.04);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -308,7 +297,7 @@ body {
 }
 
 .panel-title {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--text-main);
   display: flex;
@@ -329,7 +318,7 @@ body {
 .editor-container {
   position: relative;
   display: flex;
-  background-color: var(--bg-surface);
+  background-color: #ffffff;
   min-height: 240px;
 }
 
@@ -346,9 +335,9 @@ body {
 
 .line-numbers {
   padding: 0.8rem 0.5rem;
-  background-color: var(--bg-surface);
+  background-color: #f6f8fa;
   border-right: 1px solid var(--border-subtle);
-  color: var(--text-dim);
+  color: #656d76;
   font-family: var(--font-mono);
   font-size: 0.85rem;
   line-height: 1.5;
@@ -365,7 +354,7 @@ body {
   padding: 0.8rem 1rem;
   border: none;
   outline: none;
-  background: transparent;
+  background: #ffffff;
   color: var(--text-main);
   font-family: var(--font-mono);
   font-size: 0.88rem;
@@ -451,21 +440,12 @@ body {
 
 /* Transparency checkerboard vs White canvas */
 .preview-viewport.bg-transparent {
-  background-color: #1a1a24;
-  background-image: repeating-conic-gradient(rgba(255, 255, 255, 0.05) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
-}
-
-[data-theme="light"] .preview-viewport.bg-transparent {
-  background-color: #f0f2f5;
-  background-image: repeating-conic-gradient(rgba(0, 0, 0, 0.06) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
+  background-color: #ffffff;
+  background-image: repeating-conic-gradient(#e1e4e8 0% 25%, #ffffff 0% 50%) 50% / 16px 16px;
 }
 
 .preview-viewport.bg-white {
-  background-color: #e5e7eb;
-}
-
-[data-theme="dark"] .preview-viewport.bg-white {
-  background-color: #0b0e14;
+  background-color: #f6f8fa;
 }
 
 .diagram-stage {
@@ -481,13 +461,17 @@ body {
   display: block;
   max-width: none;
   max-height: none;
-  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.15));
 }
 
 .preview-viewport.bg-white .diagram-stage svg {
   background-color: #ffffff;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(31, 35, 40, 0.12), 0 8px 24px rgba(66, 74, 83, 0.08);
+}
+
+.preview-viewport.bg-transparent .diagram-stage svg {
+  filter: drop-shadow(0 2px 8px rgba(31, 35, 40, 0.12));
 }
 
 /* Loading & Empty states */
@@ -506,15 +490,15 @@ body {
 }
 
 .empty-state-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   color: var(--text-dim);
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(56, 139, 253, 0.2);
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(9, 105, 218, 0.2);
   border-top-color: var(--accent-blue);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -524,14 +508,14 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Error Banner */
+/* Error Banner (GitHub Alert Style) */
 .error-banner {
   margin: 1rem;
   padding: 0.85rem 1rem;
-  background-color: rgba(248, 81, 73, 0.12);
-  border: 1px solid rgba(248, 81, 73, 0.4);
+  background-color: #ffebe9;
+  border: 1px solid #ff8182;
   border-radius: var(--radius-sm);
-  color: #ff7b72;
+  color: #cf222e;
   font-size: 0.85rem;
   display: flex;
   align-items: flex-start;
@@ -539,32 +523,28 @@ body {
   line-height: 1.4;
 }
 
-[data-theme="light"] .error-banner {
-  background-color: #ffebe9;
-  border-color: #ff8182;
-  color: #cf222e;
-}
-
 .error-banner pre {
   margin-top: 0.4rem;
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+  border: 1px solid rgba(207, 34, 46, 0.25);
   padding: 0.4rem 0.6rem;
   border-radius: 4px;
   white-space: pre-wrap;
   word-break: break-all;
+  color: #cf222e;
 }
 
 /* ==========================================================================
-   Modals (<dialog>)
+   Modals (<dialog>) (GitHub Primer Style)
    ========================================================================== */
 dialog {
-  border: 1px solid var(--border-strong);
-  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  background-color: #ffffff;
   color: var(--text-main);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
   padding: 0;
   max-width: 640px;
   width: 90vw;
@@ -572,12 +552,13 @@ dialog {
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(3px);
+  background: rgba(31, 35, 40, 0.4);
+  backdrop-filter: blur(2px);
 }
 
 .dialog-header {
   padding: 1rem 1.25rem;
+  background-color: var(--bg-surface-elevated);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -585,8 +566,9 @@ dialog::backdrop {
 }
 
 .dialog-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
+  color: var(--text-main);
 }
 
 .dialog-body {
@@ -597,6 +579,7 @@ dialog::backdrop {
 
 .dialog-footer {
   padding: 0.75rem 1.25rem;
+  background-color: var(--bg-surface-elevated);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   justify-content: flex-end;
@@ -618,13 +601,16 @@ dialog::backdrop {
 .cheat-table th {
   color: var(--text-muted);
   font-weight: 600;
+  background-color: #f6f8fa;
 }
 
 .cheat-table code {
   font-family: var(--font-mono);
-  background: var(--bg-surface-elevated);
-  padding: 0.15rem 0.4rem;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  padding: 0.15rem 0.35rem;
   border-radius: 4px;
+  color: #1f2328;
 }
 
 /* ==========================================================================
@@ -642,12 +628,12 @@ dialog::backdrop {
 }
 
 .toast {
-  background-color: var(--bg-surface-elevated);
+  background-color: #ffffff;
   color: var(--text-main);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-subtle);
   padding: 0.65rem 1rem;
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(140, 149, 159, 0.2);
   font-size: 0.85rem;
   display: flex;
   align-items: center;

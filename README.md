@@ -40,8 +40,7 @@
   - Gantt Chart (Project Schedule)
 - **🔍 Pan & Zoom Controls**: Mouse drag to pan, mouse wheel or buttons to zoom, 100% reset, and auto-fit to screen.
 - **🔗 Shareable Bookmarks**: Share diagrams with full state encoded in URL hash (`#uml=...`).
-- **💾 Offline Autosave**: Automatically persists your code in `localStorage` so your work is never lost.
-- **🌗 Dark & Light Theme**: Automatically matches your system preference or toggles manually with accessible contrast.
+- **🐙 GitHub Light Color Scheme**: Clean, distraction-free aesthetic based on GitHub's Primer design system.
 
 ---
 
