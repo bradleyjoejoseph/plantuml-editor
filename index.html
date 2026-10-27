@@ -135,6 +135,41 @@
           </div>
 
           <div class="panel-actions">
+            <!-- Visual Edit Mode Toggle -->
+            <button id="editModeToggleBtn" class="btn btn-primary" title="Interactive visual editing: click to customize, double-click to edit text">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span id="editModeLabel">Visual Edit: ON</span>
+            </button>
+
+            <!-- Visual Style Presets Dropdown -->
+            <div class="dropdown-wrapper" style="position:relative;">
+              <button id="stylesMenuBtn" class="btn" title="Visual Style Presets & Theme Skinparams">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path><circle cx="12" cy="12" r="4"></circle></svg>
+                Styles ▾
+              </button>
+              <div id="stylesDropdownMenu" class="styles-dropdown-menu" style="display:none;">
+                <div class="menu-heading">Diagram Visual Themes</div>
+                <button class="style-option-btn" data-param="handwritten" data-val="true">
+                  <span class="check-icon">✓</span> Handwritten / Sketchy
+                </button>
+                <button class="style-option-btn" data-param="monochrome" data-val="true">
+                  <span class="check-icon">✓</span> Monochrome Minimal
+                </button>
+                <button class="style-option-btn" data-param="roundcorner" data-val="12">
+                  <span class="check-icon">✓</span> Rounded Box Corners
+                </button>
+                <button class="style-option-btn" data-param="linetype" data-val="ortho">
+                  <span class="check-icon">✓</span> Orthogonal Lines
+                </button>
+                <button class="style-option-btn" data-param="defaultFontName" data-val="monospace">
+                  <span class="check-icon">✓</span> Monospace Font
+                </button>
+                <button class="style-option-btn" data-param="shadowing" data-val="false">
+                  <span class="check-icon">✓</span> Flat (No Shadows)
+                </button>
+              </div>
+            </div>
+
             <!-- Background Options: Transparent vs White -->
             <div class="segmented-group" role="group" aria-label="Diagram Background Option">
               <button id="bgTransparentBtn" class="segmented-btn active" title="Transparent background for export & display">
@@ -192,8 +227,25 @@
         </div>
 
         <!-- Viewport Container with Drag-to-Pan and Wheel-to-Zoom -->
-        <div id="previewViewport" class="preview-viewport bg-transparent">
+        <div id="previewViewport" class="preview-viewport bg-transparent is-edit-mode">
           <div id="diagramStage" class="diagram-stage"></div>
+
+          <!-- Inline Text Editor Input (WYSIWYG Floating Overlay) -->
+          <input
+            id="inlineTextEditor"
+            class="inline-text-editor"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Edit Diagram Text"
+            style="display:none;"
+          />
+
+          <!-- Element Action Inspector Popover (Floating Color & Shape Toolbar) -->
+          <div id="elementActionPopover" class="element-action-popover" style="display:none;" role="toolbar" aria-label="Element Actions"></div>
+
+          <!-- Interactive Hover Tooltip -->
+          <div id="interactiveTooltip" class="interactive-tooltip" style="display:none;" aria-hidden="true"></div>
 
           <!-- Empty State Overlay -->
           <div id="emptyState" class="overlay-state">

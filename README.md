@@ -37,9 +37,14 @@
   - Mind Map
   - C4 Architecture Context
   - JSON / Data Tree Visualizer
-  - Gantt Chart (Project Schedule)
-- **🔍 Pan & Zoom Controls**: Mouse drag to pan, mouse wheel or buttons to zoom, 100% reset, and auto-fit to screen.
-- **🔗 Shareable Bookmarks**: Share diagrams with full state encoded in URL hash (`#uml=...`).
+- **✏️ Interactive Visual Editing in Viewer (Two-Way Sync)**:
+  - **Inline Text Editing**: Double-click any text (participants, boxes, arrow labels, notes, class names) directly in the viewer; automatically synchronizes with and updates the PlantUML markdown in the code editor!
+  - **Element Action Inspector**: Click any box, entity, or arrow to open an interactive floating toolbar:
+    - **8-Color Pastel Palette**: Customize box and arrow colors (`#DDF4FF`, `#DAFBE1`, `#FFF8C5`, `#FFEBE9`, `#FBEFFF`, `#FFDFB6`, etc.), immediately updating `#color` declarations in the UML source.
+    - **Arrow Styles**: Switch arrow style between Solid (`->`), Dashed (`-->`), and Bidirectional (`<->`).
+    - **Add Notes**: Attach notes directly to entities with one click.
+    - **Delete Element**: Cleanly removes elements from the diagram and UML source code.
+  - **Visual Styles Presets**: 1-click toggle menu for Handwritten/Sketchy mode, Monochrome, Rounded corners, Orthogonal lines, and Monospace typography.
 - **🐙 GitHub Light Color Scheme**: Clean, distraction-free aesthetic based on GitHub's Primer design system.
 
 ---

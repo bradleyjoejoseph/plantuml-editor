@@ -2,8 +2,17 @@ import { renderPlantUML, processSvgBackground, getSvgDimensions } from './render
 import { exportToBlob, downloadBlob, downloadSvgFile, copyImageToClipboard, copyTextToClipboard } from './exporter.js';
 import { encodePlantUML, decodePlantUML } from './encoder.js';
 import { TEMPLATES } from './templates.js';
+import {
+  replaceTextInUml,
+  setElementColorInUml,
+  setArrowColorInUml,
+  setArrowStyleInUml,
+  addNoteToElementInUml,
+  toggleSkinparamInUml,
+  hasSkinparam
+} from './umlModifier.js';
 
-// DOM Elements
+// DOM Elements - Editor
 const codeEditor = document.getElementById('codeEditor');
 const lineNumbers = document.getElementById('lineNumbers');
 const editorStats = document.getElementById('editorStats');
@@ -15,6 +24,7 @@ const pasteBtn = document.getElementById('pasteBtn');
 const wrapBtn = document.getElementById('wrapBtn');
 const clearBtn = document.getElementById('clearBtn');
 
+// DOM Elements - Workspace & Preview
 const appContainer = document.getElementById('appContainer');
 const previewViewport = document.getElementById('previewViewport');
 const diagramStage = document.getElementById('diagramStage');
@@ -24,6 +34,16 @@ const errorBanner = document.getElementById('errorBanner');
 const errorMessage = document.getElementById('errorMessage');
 const loadSampleEmptyBtn = document.getElementById('loadSampleEmptyBtn');
 
+// DOM Elements - Visual Edit & Styles Controls
+const editModeToggleBtn = document.getElementById('editModeToggleBtn');
+const editModeLabel = document.getElementById('editModeLabel');
+const stylesMenuBtn = document.getElementById('stylesMenuBtn');
+const stylesDropdownMenu = document.getElementById('stylesDropdownMenu');
+const inlineTextEditor = document.getElementById('inlineTextEditor');
+const elementActionPopover = document.getElementById('elementActionPopover');
+const interactiveTooltip = document.getElementById('interactiveTooltip');
+
+// DOM Elements - Viewport & Background Controls
 const bgTransparentBtn = document.getElementById('bgTransparentBtn');
 const bgWhiteBtn = document.getElementById('bgWhiteBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
@@ -32,12 +52,14 @@ const zoomResetBtn = document.getElementById('zoomResetBtn');
 const zoomFitBtn = document.getElementById('zoomFitBtn');
 const exportScaleSelect = document.getElementById('exportScaleSelect');
 
+// DOM Elements - Exports
 const downloadPngBtn = document.getElementById('downloadPngBtn');
 const downloadJpegBtn = document.getElementById('downloadJpegBtn');
 const downloadSvgBtn = document.getElementById('downloadSvgBtn');
 const copyPngBtn = document.getElementById('copyPngBtn');
 const copySvgBtn = document.getElementById('copySvgBtn');
 
+// DOM Elements - Top Header
 const templateSelect = document.getElementById('templateSelect');
 const layoutStackedBtn = document.getElementById('layoutStackedBtn');
 const layoutSplitBtn = document.getElementById('layoutSplitBtn');
@@ -55,8 +77,14 @@ let zoom = 1.0;
 let pan = { x: 0, y: 0 };
 let isDragging = false;
 let dragStart = { x: 0, y: 0 };
+let mouseDownPos = { x: 0, y: 0, time: 0 };
 let debounceTimer = null;
 let abortController = null;
+
+// Visual Interactive Edit State
+let isVisualEditMode = true;
+let activeEditingOldText = '';
+let selectedElementInfo = null;
 
 // ============================================================================
 // Toast Notification System
@@ -171,7 +199,6 @@ codeEditor.addEventListener('keydown', (e) => {
     const start = codeEditor.selectionStart;
     const end = codeEditor.selectionEnd;
     if (start === end) {
-      // If closing bracket matches next character, skip typing
       const nextChar = codeEditor.value.charAt(start);
       if (nextChar === e.key && (e.key === '"' || e.key === "'")) {
         e.preventDefault();
@@ -188,7 +215,6 @@ codeEditor.addEventListener('keydown', (e) => {
   }
 });
 
-// Synchronize line numbers on scroll
 codeEditor.addEventListener('scroll', () => {
   lineNumbers.scrollTop = codeEditor.scrollTop;
 });
@@ -216,7 +242,6 @@ pasteBtn.addEventListener('click', async () => {
   } catch (err) {
     console.warn('Clipboard read error:', err);
   }
-  // Fallback: focus editor
   codeEditor.focus();
   codeEditor.select();
   showToast('Press Cmd+V / Ctrl+V to paste', 'info');
@@ -248,6 +273,7 @@ clearBtn.addEventListener('click', () => {
     currentSvg = '';
     emptyState.style.display = 'flex';
     errorBanner.style.display = 'none';
+    closePopovers();
     statusText.textContent = 'Ready';
     statusDot.className = 'status-dot';
   }
@@ -270,6 +296,8 @@ function triggerAutoRender() {
 // ============================================================================
 async function renderCurrentDiagram() {
   const code = codeEditor.value.trim();
+  closePopovers();
+
   if (!code) {
     diagramStage.innerHTML = '';
     currentSvg = '';
@@ -280,7 +308,6 @@ async function renderCurrentDiagram() {
     return;
   }
 
-  // Cancel any in-flight request
   if (abortController) {
     abortController.abort();
   }
@@ -295,7 +322,6 @@ async function renderCurrentDiagram() {
     const result = await renderPlantUML(code, currentBackgroundMode, abortController.signal);
     currentSvg = result.svg;
 
-    // Display SVG in diagram stage
     diagramStage.innerHTML = currentSvg;
     emptyState.style.display = 'none';
     loadingOverlay.style.display = 'none';
@@ -304,8 +330,8 @@ async function renderCurrentDiagram() {
     statusDot.className = 'status-dot';
     statusText.textContent = `Rendered (${result.renderTime}ms)`;
 
-    // Update viewport transform
     applyTransform();
+    updateStylesMenuChecks();
   } catch (err) {
     if (err.name === 'AbortError') return;
 
@@ -322,6 +348,441 @@ async function renderCurrentDiagram() {
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// ============================================================================
+// Visual Edit Mode Toggle & Styles Presets
+// ============================================================================
+function setVisualEditMode(enable) {
+  isVisualEditMode = enable;
+  if (isVisualEditMode) {
+    previewViewport.classList.add('is-edit-mode');
+    editModeToggleBtn.classList.add('btn-primary');
+    editModeLabel.textContent = 'Visual Edit: ON';
+    showToast('Visual Edit Mode ON: Click elements to customize, double-click to edit text.');
+  } else {
+    previewViewport.classList.remove('is-edit-mode');
+    editModeToggleBtn.classList.remove('btn-primary');
+    editModeLabel.textContent = 'Visual Edit: OFF';
+    closePopovers();
+  }
+}
+
+editModeToggleBtn.addEventListener('click', () => {
+  setVisualEditMode(!isVisualEditMode);
+});
+
+// Styles presets menu
+stylesMenuBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const isOpen = stylesDropdownMenu.style.display === 'block';
+  if (isOpen) {
+    stylesDropdownMenu.style.display = 'none';
+  } else {
+    updateStylesMenuChecks();
+    stylesDropdownMenu.style.display = 'block';
+  }
+});
+
+function updateStylesMenuChecks() {
+  const code = codeEditor.value;
+  const options = stylesDropdownMenu.querySelectorAll('.style-option-btn');
+  options.forEach((btn) => {
+    const param = btn.getAttribute('data-param');
+    const val = btn.getAttribute('data-val');
+    const active = hasSkinparam(code, param, val);
+    if (active) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
+stylesDropdownMenu.addEventListener('click', (e) => {
+  const btn = e.target.closest('.style-option-btn');
+  if (!btn) return;
+  const param = btn.getAttribute('data-param');
+  const val = btn.getAttribute('data-val');
+  const currentlyActive = btn.classList.contains('active');
+
+  const updatedCode = toggleSkinparamInUml(codeEditor.value, param, val, !currentlyActive);
+  codeEditor.value = updatedCode;
+  updateLineNumbers();
+  localStorage.setItem('plantuml_saved_code', updatedCode);
+  renderCurrentDiagram();
+  updateStylesMenuChecks();
+  showToast(`${!currentlyActive ? 'Enabled' : 'Disabled'} ${btn.textContent.trim()}`);
+});
+
+// ============================================================================
+// Inline Text Editing (WYSIWYG on SVG)
+// ============================================================================
+function openInlineTextEditor(textElement) {
+  if (!textElement) return;
+  closePopovers();
+
+  activeEditingOldText = textElement.textContent.trim();
+  inlineTextEditor.value = activeEditingOldText;
+
+  const textRect = textElement.getBoundingClientRect();
+  const viewportRect = previewViewport.getBoundingClientRect();
+
+  const left = textRect.left - viewportRect.left;
+  const top = textRect.top - viewportRect.top;
+
+  inlineTextEditor.style.left = `${Math.max(10, left - 4)}px`;
+  inlineTextEditor.style.top = `${Math.max(10, top - 4)}px`;
+  inlineTextEditor.style.width = `${Math.max(textRect.width + 24, 130)}px`;
+  inlineTextEditor.style.height = `${Math.max(textRect.height + 8, 28)}px`;
+  inlineTextEditor.style.display = 'block';
+
+  inlineTextEditor.focus();
+  inlineTextEditor.select();
+}
+
+function commitInlineEdit() {
+  if (inlineTextEditor.style.display === 'none') return;
+  const newText = inlineTextEditor.value.trim();
+  inlineTextEditor.style.display = 'none';
+
+  if (newText && newText !== activeEditingOldText) {
+    const updatedCode = replaceTextInUml(codeEditor.value, activeEditingOldText, newText);
+    if (updatedCode !== codeEditor.value) {
+      codeEditor.value = updatedCode;
+      updateLineNumbers();
+      localStorage.setItem('plantuml_saved_code', updatedCode);
+      renderCurrentDiagram();
+      showToast(`Updated "${activeEditingOldText}" → "${newText}" in UML!`);
+    }
+  }
+  activeEditingOldText = '';
+}
+
+function cancelInlineEdit() {
+  inlineTextEditor.style.display = 'none';
+  activeEditingOldText = '';
+}
+
+// IME-Safe Enter-to-Submit (modern-web-guidance: ime-safe-enter-submit)
+inlineTextEditor.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    // Block submission if user is actively composing with an IME or keyCode is 229
+    if (e.isComposing || e.keyCode === 229) {
+      return;
+    }
+    commitInlineEdit();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    cancelInlineEdit();
+  }
+});
+
+inlineTextEditor.addEventListener('blur', () => {
+  commitInlineEdit();
+});
+
+// ============================================================================
+// Interactive Element Inspector Popover
+// ============================================================================
+const GITHUB_PALETTE = [
+  { name: 'Blue', hex: '#DDF4FF' },
+  { name: 'Green', hex: '#DAFBE1' },
+  { name: 'Yellow', hex: '#FFF8C5' },
+  { name: 'Red', hex: '#FFEBE9' },
+  { name: 'Purple', hex: '#FBEFFF' },
+  { name: 'Orange', hex: '#FFDFB6' },
+  { name: 'Gray', hex: '#F6F8FA' },
+  { name: 'White', hex: '#FFFFFF' }
+];
+
+function openElementActionPopover(element, clientX, clientY) {
+  closePopovers();
+  selectedElementInfo = analyzeClickedElement(element);
+  if (!selectedElementInfo) return;
+
+  const viewportRect = previewViewport.getBoundingClientRect();
+  const posX = Math.min(Math.max(10, clientX - viewportRect.left + 10), viewportRect.width - 230);
+  const posY = Math.min(Math.max(10, clientY - viewportRect.top + 10), viewportRect.height - 200);
+
+  const isArrow = selectedElementInfo.type === 'arrow';
+  const name = selectedElementInfo.name;
+
+  elementActionPopover.innerHTML = `
+    <div class="popover-header">
+      <span class="popover-title" title="${escapeHtml(name)}">${isArrow ? 'Arrow' : 'Box'}: <strong>${escapeHtml(name)}</strong></span>
+      <button class="popover-close-btn" id="popoverCloseBtn" title="Close">×</button>
+    </div>
+
+    <div>
+      <div class="popover-section-label">Color Fill</div>
+      <div class="color-chips-row">
+        ${GITHUB_PALETTE.map(c => `
+          <button class="color-chip" data-color="${c.hex}" title="${c.name} (${c.hex})" style="background:${c.hex};"></button>
+        `).join('')}
+        <button class="color-chip" data-color="default" title="Clear / Default" style="background:transparent; display:flex; align-items:center; justify-content:center; font-size:10px; color:#656d76;">✕</button>
+      </div>
+    </div>
+
+    <div class="popover-actions-row">
+      <button class="popover-action-btn" id="popoverEditTextBtn" title="Edit text label">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        Edit Text
+      </button>
+
+      ${!isArrow ? `
+        <button class="popover-action-btn" id="popoverAddNoteBtn" title="Add note to this element">
+          + Note
+        </button>
+      ` : `
+        <button class="popover-action-btn" data-arrow-style="solid" title="Solid Arrow (->)">→</button>
+        <button class="popover-action-btn" data-arrow-style="dashed" title="Dashed Arrow (-->)">⇢</button>
+        <button class="popover-action-btn" data-arrow-style="bidi" title="Bidirectional (<->)">↔</button>
+      `}
+
+      <button class="popover-action-btn danger" id="popoverDeleteBtn" title="Remove element from UML">
+        Delete
+      </button>
+    </div>
+  `;
+
+  elementActionPopover.style.left = `${posX}px`;
+  elementActionPopover.style.top = `${posY}px`;
+  elementActionPopover.style.display = 'flex';
+
+  // Wire up popover events
+  document.getElementById('popoverCloseBtn').addEventListener('click', closePopovers);
+
+  document.getElementById('popoverEditTextBtn').addEventListener('click', () => {
+    const textEl = selectedElementInfo.textElement;
+    closePopovers();
+    if (textEl) {
+      openInlineTextEditor(textEl);
+    } else {
+      const promptNew = prompt(`Edit text for "${name}":`, name);
+      if (promptNew && promptNew.trim() && promptNew !== name) {
+        const updated = replaceTextInUml(codeEditor.value, name, promptNew.trim());
+        applyUmlCodeChange(updated, `Renamed "${name}" → "${promptNew.trim()}"`);
+      }
+    }
+  });
+
+  elementActionPopover.querySelectorAll('.color-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const color = chip.getAttribute('data-color');
+      const isClear = color === 'default';
+      let updated = '';
+
+      if (isArrow) {
+        updated = setArrowColorInUml(codeEditor.value, name, isClear ? 'default' : color);
+      } else {
+        updated = setElementColorInUml(codeEditor.value, name, isClear ? 'default' : color);
+      }
+
+      applyUmlCodeChange(updated, `Updated color for "${name}"`);
+      closePopovers();
+    });
+  });
+
+  const noteBtn = document.getElementById('popoverAddNoteBtn');
+  if (noteBtn) {
+    noteBtn.addEventListener('click', () => {
+      const note = prompt(`Enter note for ${name}:`);
+      if (note && note.trim()) {
+        const updated = addNoteToElementInUml(codeEditor.value, name, note.trim());
+        applyUmlCodeChange(updated, `Added note to "${name}"`);
+        closePopovers();
+      }
+    });
+  }
+
+  elementActionPopover.querySelectorAll('[data-arrow-style]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const style = btn.getAttribute('data-arrow-style');
+      const updated = setArrowStyleInUml(codeEditor.value, name, style);
+      applyUmlCodeChange(updated, `Updated arrow style to ${style}`);
+      closePopovers();
+    });
+  });
+
+  document.getElementById('popoverDeleteBtn').addEventListener('click', () => {
+    if (confirm(`Remove "${name}" from diagram?`)) {
+      const lines = codeEditor.value.split('\n');
+      const filtered = lines.filter(l => !l.includes(name));
+      applyUmlCodeChange(filtered.join('\n'), `Removed "${name}"`);
+      closePopovers();
+    }
+  });
+}
+
+function applyUmlCodeChange(newCode, toastMsg) {
+  if (newCode !== codeEditor.value) {
+    codeEditor.value = newCode;
+    updateLineNumbers();
+    localStorage.setItem('plantuml_saved_code', newCode);
+    renderCurrentDiagram();
+    if (toastMsg) showToast(toastMsg);
+  }
+}
+
+function closePopovers() {
+  elementActionPopover.style.display = 'none';
+  stylesDropdownMenu.style.display = 'none';
+  interactiveTooltip.style.display = 'none';
+  selectedElementInfo = null;
+}
+
+// Analyze SVG element clicked to extract entity/arrow name and text
+function analyzeClickedElement(el) {
+  if (!el || el === diagramStage || el === previewViewport) return null;
+
+  // 1. Clicked directly on a text node
+  if (el.tagName && el.tagName.toLowerCase() === 'text') {
+    const text = el.textContent.trim();
+    if (!text || /^\d+$/.test(text)) {
+      // If just autonumber digit, check sibling text
+      const nextText = el.nextElementSibling;
+      if (nextText && nextText.tagName.toLowerCase() === 'text') {
+        return { type: 'arrow', name: nextText.textContent.trim(), textElement: nextText };
+      }
+    }
+    // Check if line or polygon is near (arrow label)
+    const parentG = el.closest('g');
+    const hasLine = parentG && parentG.querySelector('line, polygon');
+    return {
+      type: hasLine ? 'arrow' : 'box',
+      name: text,
+      textElement: el
+    };
+  }
+
+  // 2. Clicked on an arrow line or polygon
+  if (el.tagName && (el.tagName.toLowerCase() === 'line' || el.tagName.toLowerCase() === 'polygon')) {
+    const parent = el.closest('g') || diagramStage;
+    const textEl = parent.querySelector('text');
+    const name = textEl ? textEl.textContent.trim() : 'Arrow';
+    return { type: 'arrow', name, textElement: textEl };
+  }
+
+  // 3. Clicked on a box, rect, ellipse, or path
+  const entityG = el.closest('g[data-qualified-name], g.entity, g');
+  if (entityG) {
+    const qName = entityG.getAttribute('data-qualified-name');
+    const title = entityG.querySelector('title');
+    const textEl = entityG.querySelector('text');
+    const name = qName || (title ? title.textContent.trim() : (textEl ? textEl.textContent.trim() : ''));
+    if (name) {
+      return { type: 'box', name, textElement: textEl };
+    }
+  }
+
+  // 4. Sibling text detection for bare rects
+  const prevOrNextText = el.previousElementSibling?.tagName === 'text'
+    ? el.previousElementSibling
+    : (el.nextElementSibling?.tagName === 'text' ? el.nextElementSibling : null);
+
+  if (prevOrNextText) {
+    return { type: 'box', name: prevOrNextText.textContent.trim(), textElement: prevOrNextText };
+  }
+
+  return null;
+}
+
+// ============================================================================
+// Interactive SVG Viewport Handlers (Pan, Zoom, Click, Double-Click)
+// ============================================================================
+// Mouse hover tooltip
+previewViewport.addEventListener('mousemove', (e) => {
+  if (!isVisualEditMode || isDragging || inlineTextEditor.style.display === 'block') {
+    interactiveTooltip.style.display = 'none';
+    return;
+  }
+
+  const target = document.elementFromPoint(e.clientX, e.clientY);
+  const info = analyzeClickedElement(target);
+
+  if (info && info.name) {
+    const viewportRect = previewViewport.getBoundingClientRect();
+    interactiveTooltip.textContent = info.textElement
+      ? `Double-click to edit "${info.name}" • Click for colors`
+      : `Click to customize "${info.name}"`;
+    interactiveTooltip.style.left = `${e.clientX - viewportRect.left}px`;
+    interactiveTooltip.style.top = `${e.clientY - viewportRect.top}px`;
+    interactiveTooltip.style.display = 'block';
+  } else {
+    interactiveTooltip.style.display = 'none';
+  }
+});
+
+previewViewport.addEventListener('mouseleave', () => {
+  interactiveTooltip.style.display = 'none';
+});
+
+// Distinguish pan-drag vs element click
+previewViewport.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  // If clicking inside active popovers, don't drag
+  if (e.target.closest('#elementActionPopover, #inlineTextEditor, #stylesDropdownMenu')) {
+    return;
+  }
+
+  mouseDownPos = { x: e.clientX, y: e.clientY, time: Date.now() };
+  isDragging = true;
+  dragStart = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+  previewViewport.classList.add('is-dragging');
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  pan = {
+    x: e.clientX - dragStart.x,
+    y: e.clientY - dragStart.y
+  };
+  applyTransform();
+});
+
+window.addEventListener('mouseup', (e) => {
+  if (!isDragging) return;
+  isDragging = false;
+  previewViewport.classList.remove('is-dragging');
+
+  // Check if this was a quick click rather than a pan drag
+  const dist = Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y);
+  if (dist < 6 && isVisualEditMode) {
+    // If clicking outside active popover, close it
+    if (!e.target.closest('#elementActionPopover, #stylesDropdownMenu, #stylesMenuBtn')) {
+      closePopovers();
+    }
+
+    const clickedEl = document.elementFromPoint(e.clientX, e.clientY);
+    if (clickedEl && clickedEl.closest('#diagramStage')) {
+      const info = analyzeClickedElement(clickedEl);
+      if (info && info.name) {
+        openElementActionPopover(clickedEl, e.clientX, e.clientY);
+      }
+    }
+  }
+});
+
+// Double click directly launches inline text editor
+previewViewport.addEventListener('dblclick', (e) => {
+  if (!isVisualEditMode) return;
+  const clickedEl = document.elementFromPoint(e.clientX, e.clientY);
+  if (!clickedEl || !clickedEl.closest('#diagramStage')) return;
+
+  const info = analyzeClickedElement(clickedEl);
+  if (info && info.textElement) {
+    e.preventDefault();
+    openInlineTextEditor(info.textElement);
+  }
+});
+
+// Close floating menus when clicking document
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#stylesMenuBtn, #stylesDropdownMenu')) {
+    stylesDropdownMenu.style.display = 'none';
+  }
+});
 
 // ============================================================================
 // Background Toggle: Transparent vs White
@@ -342,7 +803,6 @@ function setBackgroundMode(mode) {
     previewViewport.classList.add('bg-white');
   }
 
-  // If diagram is already rendered, update its background immediately!
   if (currentSvg) {
     currentSvg = processSvgBackground(currentSvg, currentBackgroundMode);
     diagramStage.innerHTML = currentSvg;
@@ -367,12 +827,14 @@ function applyTransform() {
 function zoomBy(delta) {
   zoom = Math.min(Math.max(0.2, zoom + delta), 4.0);
   applyTransform();
+  closePopovers();
 }
 
 function resetZoom() {
   zoom = 1.0;
   pan = { x: 0, y: 0 };
   applyTransform();
+  closePopovers();
 }
 
 function fitDiagramToView() {
@@ -387,6 +849,7 @@ function fitDiagramToView() {
     zoom = Math.min(Math.min(scaleX, scaleY), 1.2);
     pan = { x: 0, y: 0 };
     applyTransform();
+    closePopovers();
   }
 }
 
@@ -401,31 +864,6 @@ previewViewport.addEventListener('wheel', (e) => {
   const delta = e.deltaY < 0 ? 0.1 : -0.1;
   zoomBy(delta);
 }, { passive: false });
-
-// Mouse drag to pan
-previewViewport.addEventListener('mousedown', (e) => {
-  // Only pan on left click
-  if (e.button !== 0) return;
-  isDragging = true;
-  dragStart = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-  previewViewport.classList.add('is-dragging');
-});
-
-window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  pan = {
-    x: e.clientX - dragStart.x,
-    y: e.clientY - dragStart.y
-  };
-  applyTransform();
-});
-
-window.addEventListener('mouseup', () => {
-  if (isDragging) {
-    isDragging = false;
-    previewViewport.classList.remove('is-dragging');
-  }
-});
 
 // ============================================================================
 // Export Engine: PNG, JPEG, SVG, Clipboard
@@ -467,7 +905,6 @@ downloadJpegBtn.addEventListener('click', async () => {
   const scale = getExportScale();
   try {
     statusText.textContent = 'Exporting JPEG...';
-    // JPEG has no transparency, so we always bake with white background
     const blob = await exportToBlob(currentSvg, {
       format: 'jpeg',
       background: 'white',
@@ -588,7 +1025,6 @@ helpModalBtn.addEventListener('click', () => {
 closeHelpModalBtn.addEventListener('click', () => helpModal.close());
 closeHelpModalFooterBtn.addEventListener('click', () => helpModal.close());
 
-// Close modal when clicking on backdrop
 helpModal.addEventListener('click', (e) => {
   const rect = helpModal.getBoundingClientRect();
   const isInDialog = (
@@ -627,7 +1063,6 @@ function initEditorContent() {
     updateLineNumbers();
     renderCurrentDiagram();
   } else {
-    // Default initial template
     codeEditor.value = TEMPLATES.sequence.code;
     updateLineNumbers();
     renderCurrentDiagram();
