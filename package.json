@@ -1,0 +1,29 @@
+{
+  "name": "plantuml-editor",
+  "version": "1.0.0",
+  "description": "Fast, clean, adware-free PlantUML web editor with live preview, transparent/white background toggles, and PNG/JPEG/SVG export.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --base=./",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "plantuml",
+    "uml",
+    "diagram",
+    "editor",
+    "adware-free",
+    "svg",
+    "png",
+    "jpeg"
+  ],
+  "author": "bradleyjoejoseph",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^8.3.5"
+  },
+  "dependencies": {
+    "pako": "^3.0.3"
+  }
+}

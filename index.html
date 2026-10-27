@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PlantUML Studio — Fast, Ad-Free PlantUML Web Editor</title>
+    <meta name="description" content="Clean, adware-free PlantUML web editor. Paste UML, preview underneath, export transparent or white PNG, JPEG, SVG with 1-click clipboard copy." />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <!-- Top Application Header -->
+    <header class="site-header">
+      <div class="brand-wrapper">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M3 9h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H3"></path>
+          <path d="M19 9h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"></path>
+          <path d="M9 3v2a2 2 0 0 1-2 2H5"></path>
+          <path d="M9 21v-2a2 2 0 0 1-2-2H5"></path>
+          <path d="M15 3v2a2 2 0 0 0 2 2h2"></path>
+          <path d="M15 21v-2a2 2 0 0 0 2-2h2"></path>
+        </svg>
+        <span class="brand-title">
+          PlantUML Studio
+          <span class="adware-free-badge">100% Ad-Free</span>
+        </span>
+      </div>
+
+      <div class="header-controls">
+        <!-- Templates Dropdown -->
+        <select id="templateSelect" class="select-control" aria-label="Load Diagram Template">
+          <option value="" disabled selected>📂 Sample Templates...</option>
+          <option value="sequence">Sequence Diagram (Auth Flow)</option>
+          <option value="class">Class Diagram (Domain Model)</option>
+          <option value="activity">Activity / Flowchart</option>
+          <option value="state">State Machine (Workflow)</option>
+          <option value="component">Component / Microservices</option>
+          <option value="usecase">Use Case Diagram</option>
+          <option value="mindmap">Mind Map</option>
+          <option value="c4">C4 Architecture Context</option>
+          <option value="json">JSON Tree Visualizer</option>
+          <option value="gantt">Gantt Chart (Schedule)</option>
+        </select>
+
+        <!-- Layout Toggle -->
+        <div class="segmented-group" role="group" aria-label="Layout view">
+          <button id="layoutStackedBtn" class="segmented-btn active" title="Stacked layout (Editor on top, Preview underneath)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg>
+            Stacked
+          </button>
+          <button id="layoutSplitBtn" class="segmented-btn" title="Split layout (Side by side)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="2"/><rect x="13" y="3" width="8" height="18" rx="2"/></svg>
+            Split
+          </button>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Theme">
+          <svg id="themeIconDark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg id="themeIconLight" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+
+        <!-- Help / Cheat Sheet -->
+        <button id="helpModalBtn" class="btn" title="View PlantUML Syntax Cheat Sheet">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          Cheat Sheet
+        </button>
+
+        <!-- Share URL -->
+        <button id="shareLinkBtn" class="btn" title="Copy shareable URL link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          Share
+        </button>
+
+        <!-- GitHub Link -->
+        <a id="githubRepoLink" href="https://github.com/bradleyjoejoseph/plantuml-editor" target="_blank" rel="noopener noreferrer" class="btn btn-icon" title="View on GitHub" aria-label="View Source on GitHub">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Editor & Preview Workspace -->
+    <main id="appContainer" class="app-container layout-stacked">
+      <!-- Top Section: PlantUML Editor -->
+      <section class="panel" aria-label="PlantUML Code Editor">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            PlantUML Source Code
+          </div>
+          <div class="panel-actions">
+            <button id="pasteBtn" class="btn" title="Paste UML from Clipboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+              Paste UML
+            </button>
+            <button id="wrapBtn" class="btn" title="Wrap code with @startuml and @enduml">
+              Wrap @startuml
+            </button>
+            <button id="clearBtn" class="btn" title="Clear Code">
+              Clear
+            </button>
+            <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.8rem; color:var(--text-muted); cursor:pointer; margin:0 0.3rem;">
+              <input type="checkbox" id="autoRenderCheckbox" checked />
+              Live Preview
+            </label>
+            <button id="renderBtn" class="btn btn-primary" title="Render Diagram (Ctrl + Enter / ⌘ + Enter)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Render (⌘↵)
+            </button>
+          </div>
+        </div>
+
+        <div class="editor-container">
+          <div id="lineNumbers" class="line-numbers" aria-hidden="true">1</div>
+          <textarea
+            id="codeEditor"
+            class="code-textarea"
+            spellcheck="false"
+            placeholder="Paste your PlantUML code here (e.g. Alice -> Bob: Hello)..."
+            aria-label="PlantUML Code Editor"
+          ></textarea>
+        </div>
+
+        <div class="editor-footer">
+          <div class="status-badge">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="statusText">Ready</span>
+          </div>
+          <div id="editorStats">Lines: 1 | Chars: 0</div>
+        </div>
+      </section>
+
+      <!-- Bottom Section: Diagram Output Underneath -->
+      <section class="panel preview-panel" aria-label="Diagram Output Preview">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            Diagram Output
+          </div>
+
+          <div class="panel-actions">
+            <!-- Background Options: Transparent vs White -->
+            <div class="segmented-group" role="group" aria-label="Diagram Background Option">
+              <button id="bgTransparentBtn" class="segmented-btn active" title="Transparent background for export & display">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                Transparent
+              </button>
+              <button id="bgWhiteBtn" class="segmented-btn" title="Crisp white background for export & display">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>
+                White
+              </button>
+            </div>
+
+            <!-- Zoom & Pan Controls -->
+            <div class="segmented-group" role="group" aria-label="Zoom controls">
+              <button id="zoomOutBtn" class="segmented-btn" title="Zoom Out (-)">−</button>
+              <button id="zoomResetBtn" class="segmented-btn" title="Reset Zoom (100%)">100%</button>
+              <button id="zoomInBtn" class="segmented-btn" title="Zoom In (+)">+</button>
+              <button id="zoomFitBtn" class="segmented-btn" title="Fit to View">Fit</button>
+            </div>
+
+            <!-- Scale Factor Dropdown for High-Res / Retina Exports -->
+            <select id="exportScaleSelect" class="select-control" title="Resolution scale for PNG/JPEG download" aria-label="Export Resolution Scale">
+              <option value="1">1x Standard</option>
+              <option value="2" selected>2x Retina (Recommended)</option>
+              <option value="3">3x High-Res Print</option>
+            </select>
+
+            <!-- Download PNG Button -->
+            <button id="downloadPngBtn" class="btn btn-blue" title="Download diagram as PNG (Transparent or White)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              PNG
+            </button>
+
+            <!-- Download JPEG Button -->
+            <button id="downloadJpegBtn" class="btn" title="Download diagram as JPEG (White background)">
+              JPEG
+            </button>
+
+            <!-- Download SVG Button -->
+            <button id="downloadSvgBtn" class="btn" title="Download diagram as vector SVG">
+              SVG
+            </button>
+
+            <!-- Copy PNG to Clipboard Button -->
+            <button id="copyPngBtn" class="btn" title="Copy PNG image to clipboard for instant pasting">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy PNG
+            </button>
+
+            <!-- Copy SVG Markup -->
+            <button id="copySvgBtn" class="btn" title="Copy raw SVG markup to clipboard">
+              Copy SVG
+            </button>
+          </div>
+        </div>
+
+        <!-- Viewport Container with Drag-to-Pan and Wheel-to-Zoom -->
+        <div id="previewViewport" class="preview-viewport bg-transparent">
+          <div id="diagramStage" class="diagram-stage"></div>
+
+          <!-- Empty State Overlay -->
+          <div id="emptyState" class="overlay-state">
+            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+            <p>Paste or type your PlantUML code above to see the diagram rendered here.</p>
+            <button id="loadSampleEmptyBtn" class="btn btn-primary" style="pointer-events:auto; margin-top:0.5rem;">
+              Load Sample Diagram
+            </button>
+          </div>
+
+          <!-- Loading Spinner Overlay -->
+          <div id="loadingOverlay" class="overlay-state" style="display:none; background:rgba(0,0,0,0.25);">
+            <div class="spinner"></div>
+            <span>Rendering diagram...</span>
+          </div>
+        </div>
+
+        <!-- Inline Error Banner -->
+        <div id="errorBanner" class="error-banner" style="display:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <div>
+            <strong>Diagram Syntax / Rendering Notice:</strong>
+            <div id="errorMessage"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- PlantUML Syntax Cheat Sheet Modal -->
+    <dialog id="helpModal">
+      <div class="dialog-header">
+        <h2 class="dialog-title">PlantUML Quick Cheat Sheet</h2>
+        <button id="closeHelpModalBtn" class="btn btn-icon" aria-label="Close dialog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <table class="cheat-table">
+          <thead>
+            <tr>
+              <th>Diagram Type</th>
+              <th>Keywords</th>
+              <th>Syntax Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sequence</strong></td>
+              <td><code>actor</code>, <code>participant</code>, <code>-></code>, <code>--></code></td>
+              <td><code>Alice -> Bob: hello</code></td>
+            </tr>
+            <tr>
+              <td><strong>Class</strong></td>
+              <td><code>class</code>, <code>abstract</code>, <code>&lt;|--</code>, <code>*--</code></td>
+              <td><code>Vehicle &lt;|-- Car</code></td>
+            </tr>
+            <tr>
+              <td><strong>Activity</strong></td>
+              <td><code>start</code>, <code>stop</code>, <code>if</code>, <code>fork</code></td>
+              <td><code>if (valid?) then (yes) :ok; endif</code></td>
+            </tr>
+            <tr>
+              <td><strong>State</strong></td>
+              <td><code>[*]</code>, <code>--></code>, <code>state</code></td>
+              <td><code>[*] --> Active --> [*]</code></td>
+            </tr>
+            <tr>
+              <td><strong>Component</strong></td>
+              <td><code>package</code>, <code>[component]</code>, <code>database</code></td>
+              <td><code>[App] --> [Database]</code></td>
+            </tr>
+            <tr>
+              <td><strong>Mindmap</strong></td>
+              <td><code>@startmindmap</code>, <code>*</code>, <code>**</code></td>
+              <td><code>* Root \n ** Topic</code></td>
+            </tr>
+            <tr>
+              <td><strong>JSON Tree</strong></td>
+              <td><code>@startjson</code>, <code>{ ... }</code></td>
+              <td><code>{"name": "PlantUML"}</code></td>
+            </tr>
+            <tr>
+              <td><strong>Transparency</strong></td>
+              <td><code>skinparam backgroundColor transparent</code></td>
+              <td>Automatic via our Transparent toggle!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="dialog-footer">
+        <button id="closeHelpModalFooterBtn" class="btn btn-primary">Got it</button>
+      </div>
+    </dialog>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
