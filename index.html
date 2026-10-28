@@ -278,6 +278,40 @@
       </section>
     </main>
 
+    <!-- Share Diagram Modal -->
+    <dialog id="shareModal">
+      <div class="dialog-header">
+        <h2 class="dialog-title">Share Diagram Link</h2>
+        <button id="closeShareModalBtn" class="btn btn-icon" aria-label="Close dialog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:0.75rem;">
+          Anyone opening this link will see your exact UML source code and the rendered diagram underneath:
+        </p>
+        <div class="share-url-box">
+          <input
+            id="shareUrlInput"
+            class="select-control"
+            type="text"
+            readonly
+            spellcheck="false"
+            style="width:100%; cursor:text; background:#ffffff; font-family:var(--font-mono); font-size:0.8rem; padding-right:0.75rem;"
+          />
+          <button id="copyShareModalBtn" class="btn btn-primary" style="white-space:nowrap;">
+            Copy Link
+          </button>
+        </div>
+        <div style="margin-top:1rem; display:flex; gap:0.5rem; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.75rem; color:var(--accent-primary); font-weight:500;">✓ Diagram &amp; text box state preserved</span>
+          <a id="openShareInNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn">
+            Open in New Tab ↗
+          </a>
+        </div>
+      </div>
+    </dialog>
+
     <!-- PlantUML Syntax Cheat Sheet Modal -->
     <dialog id="helpModal">
       <div class="dialog-header">

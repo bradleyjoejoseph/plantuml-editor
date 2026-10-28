@@ -828,6 +828,12 @@ dialog::backdrop {
   gap: 0.5rem;
 }
 
+.share-url-box {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .cheat-table {
   width: 100%;
   border-collapse: collapse;

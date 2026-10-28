@@ -69,6 +69,11 @@ const helpModal = document.getElementById('helpModal');
 const closeHelpModalBtn = document.getElementById('closeHelpModalBtn');
 const closeHelpModalFooterBtn = document.getElementById('closeHelpModalFooterBtn');
 const toastContainer = document.getElementById('toastContainer');
+const shareModal = document.getElementById('shareModal');
+const closeShareModalBtn = document.getElementById('closeShareModalBtn');
+const shareUrlInput = document.getElementById('shareUrlInput');
+const copyShareModalBtn = document.getElementById('copyShareModalBtn');
+const openShareInNewTabBtn = document.getElementById('openShareInNewTabBtn');
 
 // State
 let currentSvg = '';
@@ -332,6 +337,7 @@ async function renderCurrentDiagram() {
 
     applyTransform();
     updateStylesMenuChecks();
+    syncUrlWithEditor();
   } catch (err) {
     if (err.name === 'AbortError') return;
 
@@ -970,22 +976,79 @@ copySvgBtn.addEventListener('click', async () => {
 });
 
 // ============================================================================
-// Share Link Generation
+// Share Link Generation & Real-time URL Synchronization
 // ============================================================================
+function getShareUrl() {
+  const code = codeEditor.value.trim();
+  const origin = window.location.origin;
+  const pathname = window.location.pathname;
+  if (!code) return `${origin}${pathname}`;
+  const encoded = encodePlantUML(code);
+  return `${origin}${pathname}#uml=${encoded}&bg=${currentBackgroundMode}`;
+}
+
+function syncUrlWithEditor() {
+  const code = codeEditor.value.trim();
+  if (!code) return;
+  const encoded = encodePlantUML(code);
+  const newHash = `#uml=${encoded}&bg=${currentBackgroundMode}`;
+  if (window.location.hash !== newHash) {
+    history.replaceState(null, '', newHash);
+  }
+}
+
+// When clicking "Share" in the header
 shareLinkBtn.addEventListener('click', async () => {
   const code = codeEditor.value.trim();
   if (!code) {
-    showToast('Type a diagram first to share', 'error');
+    showToast('Type or paste a diagram first to share', 'error');
     return;
   }
-  const encoded = encodePlantUML(code);
-  const shareUrl = `${window.location.origin}${window.location.pathname}#uml=${encoded}`;
+
+  const shareUrl = getShareUrl();
+
+  // Copy to clipboard immediately
   try {
     await copyTextToClipboard(shareUrl);
-    window.location.hash = `uml=${encoded}`;
-    showToast('Shareable URL copied to clipboard!');
   } catch (err) {
-    showToast('Unable to copy share URL', 'error');
+    console.warn('Copy clipboard warning:', err);
+  }
+
+  // Populate share modal
+  shareUrlInput.value = shareUrl;
+  openShareInNewTabBtn.href = shareUrl;
+  copyShareModalBtn.textContent = '✓ Copied!';
+
+  if (typeof shareModal.showModal === 'function') {
+    shareModal.showModal();
+    shareUrlInput.select();
+  }
+
+  showToast('Shareable link copied to clipboard!');
+});
+
+closeShareModalBtn.addEventListener('click', () => shareModal.close());
+
+copyShareModalBtn.addEventListener('click', async () => {
+  await copyTextToClipboard(shareUrlInput.value);
+  copyShareModalBtn.textContent = '✓ Copied!';
+  showToast('Shareable link copied to clipboard!');
+  setTimeout(() => {
+    copyShareModalBtn.textContent = 'Copy Link';
+  }, 2000);
+});
+
+// Close share modal when clicking on backdrop
+shareModal.addEventListener('click', (e) => {
+  const rect = shareModal.getBoundingClientRect();
+  const isInDialog = (
+    rect.top <= e.clientY &&
+    e.clientY <= rect.top + rect.height &&
+    rect.left <= e.clientX &&
+    e.clientX <= rect.left + rect.width
+  );
+  if (!isInDialog) {
+    shareModal.close();
   }
 });
 
@@ -999,7 +1062,9 @@ templateSelect.addEventListener('change', () => {
     updateLineNumbers();
     localStorage.setItem('plantuml_saved_code', codeEditor.value);
     resetZoom();
-    renderCurrentDiagram();
+    renderCurrentDiagram().then(() => {
+      setTimeout(fitDiagramToView, 120);
+    });
     showToast(`Loaded ${TEMPLATES[selectedKey].name}!`);
     templateSelect.value = '';
   }
@@ -1009,7 +1074,9 @@ loadSampleEmptyBtn.addEventListener('click', () => {
   codeEditor.value = TEMPLATES.sequence.code;
   updateLineNumbers();
   localStorage.setItem('plantuml_saved_code', codeEditor.value);
-  renderCurrentDiagram();
+  renderCurrentDiagram().then(() => {
+    setTimeout(fitDiagramToView, 120);
+  });
   showToast('Loaded Sample Sequence Diagram!');
 });
 
@@ -1039,22 +1106,60 @@ helpModal.addEventListener('click', (e) => {
 });
 
 // ============================================================================
-// Initialization from URL Hash or LocalStorage
+// Robust URL Parameter Parser & Initialization
 // ============================================================================
-function initEditorContent() {
-  const hash = window.location.hash;
-  if (hash && hash.includes('uml=')) {
-    const encoded = hash.split('uml=')[1];
-    if (encoded) {
-      const decoded = decodePlantUML(encoded);
-      if (decoded) {
-        codeEditor.value = decoded;
-        updateLineNumbers();
-        renderCurrentDiagram();
-        showToast('Diagram loaded from share URL!');
-        return;
-      }
+function parseShareUrl() {
+  let encodedUml = null;
+  let bgMode = null;
+
+  // 1. Check query parameters: ?uml=...&bg=...
+  if (window.location.search) {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('uml')) encodedUml = searchParams.get('uml');
+    if (searchParams.get('bg')) bgMode = searchParams.get('bg');
+  }
+
+  // 2. Check hash parameters: #uml=...&bg=...
+  if (!encodedUml && window.location.hash) {
+    const hashStr = window.location.hash.startsWith('#')
+      ? window.location.hash.slice(1)
+      : window.location.hash;
+
+    if (hashStr.includes('uml=')) {
+      const hashParams = new URLSearchParams(hashStr);
+      encodedUml = hashParams.get('uml');
+      if (hashParams.get('bg')) bgMode = hashParams.get('bg');
+    } else if (hashStr.length > 5) {
+      // Raw encoded PlantUML string in hash
+      encodedUml = hashStr;
     }
+  }
+
+  if (!encodedUml) return null;
+
+  try {
+    const decoded = decodePlantUML(encodedUml);
+    return { code: decoded, bg: bgMode };
+  } catch (err) {
+    console.warn('Failed to decode UML from URL:', err);
+    return null;
+  }
+}
+
+function initEditorContent() {
+  const shared = parseShareUrl();
+  if (shared && shared.code && shared.code.trim()) {
+    if (shared.bg === 'white' || shared.bg === 'transparent') {
+      setBackgroundMode(shared.bg);
+    }
+    codeEditor.value = shared.code;
+    updateLineNumbers();
+    localStorage.setItem('plantuml_saved_code', shared.code);
+    renderCurrentDiagram().then(() => {
+      setTimeout(fitDiagramToView, 120);
+    });
+    showToast('Diagram & code loaded from shared link!');
+    return;
   }
 
   const saved = localStorage.getItem('plantuml_saved_code');
@@ -1068,6 +1173,22 @@ function initEditorContent() {
     renderCurrentDiagram();
   }
 }
+
+// React to URL changes dynamically (e.g. browser Back/Forward or pasting new URL)
+window.addEventListener('hashchange', () => {
+  const shared = parseShareUrl();
+  if (shared && shared.code && shared.code.trim() && shared.code !== codeEditor.value) {
+    if (shared.bg === 'white' || shared.bg === 'transparent') {
+      setBackgroundMode(shared.bg);
+    }
+    codeEditor.value = shared.code;
+    updateLineNumbers();
+    renderCurrentDiagram().then(() => {
+      setTimeout(fitDiagramToView, 120);
+    });
+    showToast('Loaded shared diagram from updated URL!');
+  }
+});
 
 // Kick off initialization
 initEditorContent();
