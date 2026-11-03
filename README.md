@@ -1,10 +1,18 @@
 # PlantUML Studio 🎨
 
-> A fast, clean, **100% adware-free** PlantUML web editor. Paste your UML code, see the diagram rendered underneath, and download crisp PNG or JPEG images with transparent or white backgrounds.
+> I can't lie, the real plantuml.com is buns. So I decided to just borrow their stuff so you don't get spammed with ads, and made it personalized for my ENG1 project at uni.
 
 [![Deploy to GitHub Pages](https://github.com/bradleyjoejoseph/plantuml-editor/actions/workflows/deploy.yml/badge.svg)](https://github.com/bradleyjoejoseph/plantuml-editor/actions/workflows/deploy.yml)
 [![Adware Free](https://img.shields.io/badge/Adware-None-brightgreen)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+---
+
+## 💡 Why This Exists
+
+I can't lie, the official plantuml.com website is buns — clunky UI, sluggish, and constantly spamming you with ads when you're just trying to get work done.
+
+So I decided to borrow their backend rendering engine and build a clean, modern, adware-free editor tailored specifically for my **ENG1 project at uni**. You paste your UML in, see the output cleanly rendered right underneath, edit text/boxes directly, toggle between transparent and white backgrounds, export crisp PNGs/JPEGs without watermarks or ad banners, and share direct links with your group.
 
 ---
 
